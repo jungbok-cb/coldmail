@@ -1,10 +1,10 @@
 import type { Address } from 'viem';
 
-export type CoffeeMemo = {
-  numCoffees: bigint;
-  userName: string;
+export type InboxMail = {
+  emailId: number;
+  tipAmount: number;
+  sender: Address;
+  recipent: Address;
   message: string;
-  userAddress: Address;
   time: bigint;
-  twitterHandle?: string;
 };

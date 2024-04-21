@@ -5,11 +5,11 @@ import BuyMeACoffeeABI from './BuyMeACoffeeABI';
 /**
  * Returns contract data for the BuyMeACoffee contract.
  */
-export const useBuyMeACoffeeContract = generateContractHook({
+export const useColdmailContract = generateContractHook({
   abi: BuyMeACoffeeABI,
   [baseSepolia.id]: {
     chain: baseSepolia,
-    address: '0xcE0EBD0282e247553eb8fDdeE3281b5EC09ddD16',
+    address: '0x776a54E730F9bFBB45d29c7ae3712f8Eb52eAF15',
   },
 
   // ... more chains for this contract go here

@@ -1,8 +1,8 @@
-import MemoCard from './MemoCard';
-import type { CoffeeMemo } from './types';
+import InboxMessages from './MemoCard';
+import type { InboxMail } from './types';
 
 type MemosProps = {
-  memos: CoffeeMemo[];
+  memos: InboxMail[];
 };
 
 /**
@@ -19,13 +19,11 @@ function Memos({ memos }: MemosProps) {
       {memos
         .map((memo) => {
           return (
-            <MemoCard
-              key={memo.time.toString()}
-              numCoffees={memo.numCoffees}
-              userName={memo.userName}
-              twitterHandle={memo.twitterHandle}
+            <InboxMessages
+              key={memo.emailId}
+              tipAmount={memo.tipAmount}
               message={memo.message}
-              userAddress={memo.userAddress}
+              userAddress={memo.sender}
               time={memo.time}
             />
           );

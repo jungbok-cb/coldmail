@@ -1,16 +1,16 @@
 import { Avatar, Name } from '@coinbase/onchainkit/identity';
 import { clsx } from 'clsx';
 import { convertBigIntTimestampToDate } from '@/utils/timestamp';
-import type { CoffeeMemo } from './types';
+import type { InboxMail } from './types';
 
 /**
- * Memo received from the coffee purchase in BuyMeACoffee smart contract.
+ * Memo received from the coffee purchase in SendEmailWithTip smart contract.
  *
- * @param twitterHandle Twitter handle of the person who sent the memo.
+ * @param sender handle of the person who sent the message.
  * @param message Message sent by the person.
  * @param timestamp Timestamp of the memo.
  */
-function MemoCard({ numCoffees, twitterHandle, message, userAddress, time }: CoffeeMemo) {
+function InboxMessages({ emailId, tipAmount, message, senderAddress, time }: InboxMail) {
   const convertedTimestamp = convertBigIntTimestampToDate(time);
   const numCoffeesInt = Number(numCoffees);
 
@@ -18,16 +18,13 @@ function MemoCard({ numCoffees, twitterHandle, message, userAddress, time }: Cof
     <li className="flex w-full flex-col items-start gap-4">
       <div className="w-full grow items-center justify-between lg:flex">
         <div className="flex items-center gap-3">
-          <Avatar address={userAddress} />
+          <Avatar address={senderAddress} />
           <div className="inline-flex items-start gap-1 md:flex">
             <span className="text-3 text-bold truncate text-wrap font-bold text-boat-color-palette-foreground">
-              <Name address={userAddress} />
-            </span>
-            <span className="text-3 line-clamp-1 flex-1 truncate text-wrap break-all font-normal text-boat-color-palette-foregroundmuted">
-              {twitterHandle ? ` (@${twitterHandle})` : null}
+              <Name address={senderAddress} />
             </span>
             <span className="text-3 whitespace-nowrap font-normal text-boat-color-palette-foregroundmuted">
-              bought {numCoffeesInt} coffee{numCoffeesInt > 1 ? 's' : null}
+              {message}
             </span>
           </div>
         </div>
@@ -56,4 +53,4 @@ function MemoCard({ numCoffees, twitterHandle, message, userAddress, time }: Cof
   );
 }
 
-export default MemoCard;
+export default InboxMessages;

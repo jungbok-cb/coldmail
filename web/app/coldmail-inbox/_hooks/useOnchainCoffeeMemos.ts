@@ -1,34 +1,40 @@
 import { useMemo } from 'react';
 import { useReadContract } from 'wagmi';
 import { markStep } from '@/utils/analytics';
-import { useBuyMeACoffeeContract } from '../_contracts/useBuyMeACoffeeContract';
-import type { CoffeeMemo } from '../_components/types';
+import { useColdmailContract } from '../_contracts/useBuyMeACoffeeContract';
+import type { InboxMail } from '../_components/types';
 
-/**
- * Hooks is abstracting away the logic of calling a read-only function on a contract.
- * offers a refetch function to refetch the data.
- * @returns The memos and a function to refetch them.
- */
 function useOnchainCoffeeMemos() {
-  const contract = useBuyMeACoffeeContract();
+  const contract = useColdmailContract();
+  const emailId = 5;  // This is hardcoded, ensure it dynamically matches your use case.
 
-  markStep('useReadContract.refetchMemos');
+  console.log('Contract Status:', contract.status);
+  console.log('Contract Address:', contract.address);
+
+  // Logging the start of the operation
+  markStep('useReadContract.refetchMemos - start');
   const contractReadResult = useReadContract({
     address: contract.status === 'ready' ? contract.address : undefined,
     abi: contract.abi,
-    functionName: 'getMemos',
-    args: [BigInt(0), BigInt(25)], // TODO : Implement Paging
+    functionName: 'emails',
+    args: [emailId],  // Ensure args is always an array
+    enabled: Boolean(contract?.status === 'ready' && emailId != null),
   });
-  markStep('useReadContract.refetchMemos');
+  // Logging after attempting to read contract
+  markStep('useReadContract.refetchMemos - after read');
 
-  return useMemo(
-    () => ({
-      memos:
-        contractReadResult.status === 'success' ? (contractReadResult.data as CoffeeMemo[]) : [],
+  console.log('Read Contract Result:', contractReadResult);
+
+  // Using useMemo to memoize the computed values
+  return useMemo(() => {
+    const memos = contractReadResult.status === 'success' ? (contractReadResult.data as InboxMail[]) : [];
+    console.log('Memos:', memos);
+
+    return {
+      memos: memos,
       refetchMemos: contractReadResult.refetch,
-    }),
-    [contractReadResult],
-  );
+    };
+  }, [contractReadResult]);
 }
 
 export default useOnchainCoffeeMemos;
