@@ -23,7 +23,7 @@ export default function InputText({
       ])}
       placeholder={placeholder}
       onChange={onChange}
-      disabled={disabled}
+      disabled={false}
       required={required}
     />
   );

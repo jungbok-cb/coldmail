@@ -22,7 +22,7 @@ export default function TextArea({
       ])}
       placeholder={placeholder}
       onChange={onChange}
-      disabled={disabled}
+      disabled={false}
       required={required}
     />
   );

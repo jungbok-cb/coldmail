@@ -1,26 +1,26 @@
 import { SymbolIcon } from '@radix-ui/react-icons';
 import Button from '@/components/Button/Button';
-import TransactionStep from '../../coldmail-inbox/_components/TransactionStep';
-import { TransactionStates } from '../../coldmail-inbox/_components/useSmartContractForms';
+import TransactionStep from '../_components/TransactionStep';
+import { TransactionStates } from '../_components/useSmartContractForms';
 
 type TransactionStepsProps = {
   transactionStep: TransactionStates | null;
-  coffeeCount: number;
+  tipAmount: number;
   gasCost: number;
   resetContractForms: () => void;
 };
 
 export default function TransactionSteps({
   transactionStep,
-  coffeeCount,
+  tipAmount,
   resetContractForms: resetContractForms,
   gasCost,
 }: TransactionStepsProps) {
   if (transactionStep === TransactionStates.START) {
     return (
       <TransactionStep
-        status="Coffee brewing..."
-        icon="☕"
+        status="Encrypting the content..."
+        icon=""
         helpText="Please confirm transaction in your wallet"
       >
         <Button
@@ -35,7 +35,7 @@ export default function TransactionSteps({
   if (transactionStep === TransactionStates.COMPLETE) {
     return (
       <TransactionStep
-        status={`You bought ${coffeeCount} coffee${coffeeCount > 1 ? 's' : ''}!`}
+        status={`You Sent ${tipAmount} ETH ${ tipAmount > 0.01 ? 's' : ''}!`}
         icon="🎁"
         helpText="Thank you for supporting this endeavor!"
       >

@@ -29,8 +29,8 @@ export default function useSmartContractForms({
 }) {
   const [transactionState, setTransactionState] = useState<TransactionStates | null>(null);
 
-  const canAfford = useLoggedInUserCanAfford(gasFee);
-
+  //const canAfford = useLoggedInUserCanAfford(gasFee);
+  const canAfford = true
   const { data: contractRequest } = useSimulateContract({
     address: contract.status === 'ready' ? contract.address : undefined,
     abi: contract.abi,

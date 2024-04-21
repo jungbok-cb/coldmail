@@ -5,111 +5,134 @@ import { UseContractReturn } from '@/hooks/contracts';
 import { useLoggedInUserCanAfford } from '@/hooks/useUserCanAfford';
 
 export enum TransactionStates {
-    START,
-    COMPLETE,
-    OUT_OF_GAS,
+  START,
+  COMPLETE,
+  OUT_OF_GAS,
 }
 
-type AsyncFunction<Args extends unknown[], ReturnType> = (...args: Args) => Promise<ReturnType>;
-
 export default function useSmartContractForms({
-                                                  gasFee,
-                                                  contract,
-                                                  name: functionName,
-                                                  arguments: args,
-                                                  enableSubmit: isValid,
-                                                  reset,
+                                                gasFee,
+                                                contract,
+                                                name: functionName,
+                                                arguments: args,
+                                                enableSubmit: isValid,
+                                                reset,
                                               }: {
-    gasFee: bigint;
-    contract: UseContractReturn<Abi>;
-    name: string;
-    arguments: (number | string)[];
-    enableSubmit: boolean;
-    reset: AsyncFunction<unknown[], unknown>;
+  gasFee: bigint;
+  contract: UseContractReturn<Abi>;
+  name: string;
+  arguments: (number | string)[];
+  enableSubmit: boolean;
+  reset: AsyncFunction<unknown[], unknown>;
 }) {
-    const [transactionState, setTransactionState] = useState<TransactionStates | null>(null);
+  const [transactionState, setTransactionState] = useState<TransactionStates | null>(null);
 
-    const canAfford = useLoggedInUserCanAfford(gasFee);
+  const canAfford = true
+  console.log('Contract status:', contract.status, 'Can afford:',useLoggedInUserCanAfford(gasFee) );
 
-    const { data: contractRequest } = useSimulateContract({
-        address: contract.status === 'ready' ? contract.address : undefined,
-        abi: contract.abi,
-        functionName: functionName,
-        args: args,
-        query: {
-            enabled: isValid && contract.status === 'ready',
-        },
-        value: gasFee,
-    });
+  //const canAfford = useLoggedInUserCanAfford(gasFee);
+  console.log('Simulation enabled condition:', isValid && contract.status === 'ready');
+  console.log('Simulation arguments:', args);
 
-    const {
-        writeContract,
-        data: dataHash,
-        status: writeContractStatus,
-        error: writeContractError,
-    } = useWriteContract();
+  const { data: contractRequest, error: simulationError} = useSimulateContract({
+    address: contract.status === 'ready' ? contract.address : undefined,
+    abi: contract.abi,
+    functionName: functionName,
+    args: args,
+    query: {
+      enabled: isValid && contract.status === 'ready',
+    },
+    value: gasFee,
+  });
 
-    const { status: transactionReceiptStatus } = useWaitForTransactionReceipt({
-        hash: dataHash,
-        query: {
-            enabled: !!dataHash,
-        },
-    });
+  console.log('Simulation data:', contractRequest);
+  if (simulationError) {
+    console.error('Simulation error:', simulationError);
+  }
 
-    const disabled = contract.status !== 'ready' || writeContractStatus === 'pending' || !canAfford;
+  const {
+    writeContract,
+    data: dataHash,
+    status: writeContractStatus,
+    error: writeContractError,
+  } = useWriteContract();
 
-    const onSubmitTransaction = useCallback(
-        (event: { preventDefault: () => void }) => {
-            event.preventDefault();
+  console.log('Write contract status:', writeContractStatus, 'Data hash:', dataHash, 'Error:', writeContractError);
 
-            const request = contractRequest?.request;
+  const { status: transactionReceiptStatus } = useWaitForTransactionReceipt({
+    hash: dataHash,
+    query: {
+      enabled: !!dataHash,
+    },
+  });
 
-            if (request) {
-                writeContract(contractRequest?.request);
-                setTransactionState(TransactionStates.START);
-            } else {
-                setTransactionState(null);
-            }
-        },
-        [contractRequest, writeContract],
-    );
+  console.log('Transaction receipt status:', transactionReceiptStatus);
 
-    const resetContractForms = useCallback(() => {
+  const disabled = contract.status !== 'ready' || writeContractStatus === 'pending' || !canAfford;
+
+  console.log('Form disabled status:', disabled);
+
+  const onSubmitTransaction = useCallback(
+    (event: { preventDefault: () => void }) => {
+      event.preventDefault();
+      console.log('Attempting to submit transaction:', contractRequest?.request);
+
+      const request = contractRequest?.request;
+
+      if (request) {
+        writeContract(request);
+        setTransactionState(TransactionStates.START);
+        console.log('Transaction initiated:', request);
+      } else {
         setTransactionState(null);
-    }, []);
+        console.log('Transaction request not available:', request);
+      }
+    },
+    [contractRequest, writeContract],
+  );
 
-    useEffect(() => {
-        async function onTransactionReceiptStatus() {
-            if ((dataHash as string) === '') return;
+  const resetContractForms = useCallback(() => {
+    setTransactionState(null);
+    console.log('Contract forms reset');
+  }, []);
 
-            if (transactionReceiptStatus === 'error') {
-                if (
-                    writeContractError instanceof TransactionExecutionError &&
-                    writeContractError.message.toLowerCase().includes('out of gas')
-                ) {
-                    setTransactionState(TransactionStates.OUT_OF_GAS);
-                } else {
-                    setTransactionState(null);
-                }
-            }
+  useEffect(() => {
+    async function onTransactionReceiptStatus() {
+      console.log('Transaction receipt update:', transactionReceiptStatus);
 
-            if (transactionReceiptStatus === 'success') {
-                setTransactionState(TransactionStates.COMPLETE);
-            }
+      if ((dataHash as string) === '') return;
 
-            await reset();
+      if (transactionReceiptStatus === 'error') {
+        if (
+          writeContractError instanceof TransactionExecutionError &&
+          writeContractError.message.toLowerCase().includes('out of gas')
+        ) {
+          setTransactionState(TransactionStates.OUT_OF_GAS);
+          console.log('Transaction failed - Out of Gas');
+        } else {
+          setTransactionState(null);
+          console.log('Transaction failed:', writeContractError);
         }
+      }
 
-        void onTransactionReceiptStatus();
-    }, [dataHash, reset, setTransactionState, transactionReceiptStatus, writeContractError]);
+      if (transactionReceiptStatus === 'success') {
+        setTransactionState(TransactionStates.COMPLETE);
+        console.log('Transaction successful');
+      }
 
-    return useMemo(
-        () => ({
-            disabled,
-            transactionState,
-            resetContractForms,
-            onSubmitTransaction,
-        }),
-        [onSubmitTransaction, transactionState, disabled, resetContractForms],
-    );
+      await reset();
+    }
+
+    void onTransactionReceiptStatus();
+  }, [dataHash, reset, setTransactionState, transactionReceiptStatus, writeContractError]);
+
+  return useMemo(
+    () => ({
+      disabled,
+      transactionState,
+      resetContractForms,
+      onSubmitTransaction,
+    }),
+    [onSubmitTransaction, transactionState, disabled, resetContractForms],
+  );
 }
